@@ -11,13 +11,15 @@ import ome_zarr.writer
 import ome_zarr.format
 import sys
 from os import path
+
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from utils import *
 import os
 from TCFile import TCFile
 import numpy as np
 
-def tcf_to_omezarr(tcf_file_path, output_path, compressor, filters, noise_range = None):
+
+def tcf_to_omezarr(tcf_file_path, output_path, compressor, filters, noise_range=None):
     """
     Convert TCF to ome-zarr
 
@@ -27,63 +29,86 @@ def tcf_to_omezarr(tcf_file_path, output_path, compressor, filters, noise_range 
     Note: This function does not return anything.
     """
     axes = [
-        {'name': 't', 'type': 'time', 'unit': 'second'},
-        {'name': 'c', 'type': 'channel'},
-        {'name': 'z', 'type': 'space', 'unit': 'micrometer'},
-        {'name': 'y', 'type': 'space', 'unit': 'micrometer'},
-        {'name': 'x', 'type': 'space', 'unit': 'micrometer'}
+        {"name": "t", "type": "time", "unit": "second"},
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space", "unit": "micrometer"},
+        {"name": "y", "type": "space", "unit": "micrometer"},
+        {"name": "x", "type": "space", "unit": "micrometer"},
     ]
     # Refractive index
     for data_id, data_name in (("3D", "refractive_index"), ("3DFL", "fluorescence")):
         # load tcf data
         try:
-            tcf_data = TCFile(tcf_file_path,data_id)
+            tcf_data = TCFile(tcf_file_path, data_id)
         except AssertionError as e:
             print(f"{data_id} data is not found in {tcf_file_path}. Skipping...")
             continue
-        tcf_array = tcf_data.asdask() # t, c, z, y, x
-        tcf_array = tcf_array.reshape(tcf_array.shape[0],1,*tcf_array.shape[1:]) # t, c, z, y, x
+        tcf_array = tcf_data.asdask()  # t, c, z, y, x
+        tcf_array = tcf_array.reshape(
+            tcf_array.shape[0], 1, *tcf_array.shape[1:]
+        )  # t, c, z, y, x
         if data_id == "3D" and noise_range is not None:
-            noise = da.random.uniform(noise_range[0], noise_range[1], tcf_array.shape, chunks=tcf_array.chunks)
+            noise = da.random.uniform(
+                noise_range[0], noise_range[1], tcf_array.shape, chunks=tcf_array.chunks
+            )
             tcf_array += noise
         # create zarr
-        data_group = zarr.open_group(os.path.join(output_path,data_name+".ome.zarr"),mode='w')
+        data_group = zarr.open_group(
+            os.path.join(output_path, data_name + ".ome.zarr"), mode="w"
+        )
         zarray_data = data_group.require_dataset(
             "0",
-            shape = tcf_array.shape,
-            exact = True,
-            chunks = (1,1,32,256,256),
-            dtype = tcf_array.dtype,
-            compressor = compressor,
-            filters = filters,
-            dimension_separator = '/'
+            shape=tcf_array.shape,
+            exact=True,
+            chunks=(1, 1, 32, 256, 256),
+            dtype=tcf_array.dtype,
+            compressor=compressor,
+            filters=filters,
+            dimension_separator="/",
         )
-        tcf_array.store(zarray_data, lock = False, compute = True)
+        tcf_array.store(zarray_data, lock=False, compute=True)
         ome_zarr.writer.write_multiscales_metadata(
-            group = data_group,
-            datasets = [{
-                "path": "0",
-                "coordinateTransformations": [{
-                    "type": "scale",
-                    "scale": [1 if tcf_data.dt == 0 else float(tcf_data.dt), 1, *tcf_data.data_resolution],
-                },
+            group=data_group,
+            datasets=[
                 {
-                    "type": "translation",
-                    "translation": [0, 0, *list(-np.array(tcf_data.data_resolution)*np.array(tcf_data.data_shape)/2)]
-                }]
-            }],
-            fmt = ome_zarr.format.FormatV04(),
-            name = data_name.replace("_", " "),
-            axes = axes,
+                    "path": "0",
+                    "coordinateTransformations": [
+                        {
+                            "type": "scale",
+                            "scale": [
+                                1 if tcf_data.dt == 0 else float(tcf_data.dt),
+                                1,
+                                *tcf_data.data_resolution,
+                            ],
+                        },
+                        {
+                            "type": "translation",
+                            "translation": [
+                                0,
+                                0,
+                                *list(
+                                    -np.array(tcf_data.data_resolution)
+                                    * np.array(tcf_data.data_shape)
+                                    / 2
+                                ),
+                            ],
+                        },
+                    ],
+                }
+            ],
+            fmt=ome_zarr.format.FormatV04(),
+            name=data_name.replace("_", " "),
+            axes=axes,
         )
 
 
 # command-line handler
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(
-        prog='TCF -> NGFF converter',
-        description='Convert TCF file into NGFF (ome-zarr) file'
+        prog="TCF -> NGFF converter",
+        description="Convert TCF file into NGFF (ome-zarr) file",
     )
     parser.add_argument("src", type=str, help="Path of TCF file.")
     parser.add_argument("dst", type=str, help="Path to the save OME-Zarr file.")
@@ -91,16 +116,17 @@ def main():
         "--min-noise",
         type=float,
         default=-5e-5,
-        help="Minimum noise value to add (default: -5e-5)."
+        help="Minimum noise value to add (default: -5e-5).",
     )
     parser.add_argument(
         "--max-noise",
         type=float,
         default=5e-5,
-        help="Maximum noise value to add (default: 5e-5)."
+        help="Maximum noise value to add (default: 5e-5).",
     )
     parser.add_argument(
-        "-c","--compressor",
+        "-c",
+        "--compressor",
         type=str,
         required=False,
         default="zstd-19",
@@ -128,9 +154,10 @@ def main():
     if args.max_noise <= 0:
         noise_range = None
     else:
-        noise_range=(args.min_noise, args.max_noise)
+        noise_range = (args.min_noise, args.max_noise)
     os.makedirs(dst_dir, exist_ok=True)
-    tcf_to_omezarr(src_tcf, dst_dir, compressor, filters, noise_range = noise_range)
+    tcf_to_omezarr(src_tcf, dst_dir, compressor, filters, noise_range=noise_range)
+
 
 if __name__ == "__main__":
     main()

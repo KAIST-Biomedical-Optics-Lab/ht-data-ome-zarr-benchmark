@@ -11,10 +11,12 @@ from fastapi import Request
 # Directory to serve
 directory = None
 
+
 def startup_event():
     global directory
     if not directory:
         raise RuntimeError("Server requires a directory path to serve files.")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,7 +26,9 @@ async def lifespan(app: FastAPI):
     # When service is stopped.
     pass
 
+
 app = FastAPI(lifespan=lifespan)
+
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def list_files(request: Request) -> List[str]:
@@ -38,6 +42,7 @@ async def list_files(request: Request) -> List[str]:
     files = [f.name for f in Path(directory).iterdir() if f.is_file()]
     return files
 
+
 @app.get("/{file_path:path}")
 async def get_file(file_path: str):
     """Serve a file from the directory, preserving subdirectories."""
@@ -47,7 +52,7 @@ async def get_file(file_path: str):
         raise HTTPException(status_code=404, detail="File not found")
 
     # Serve JSON files as structured data
-    text_extensions = ('.zattrs', '.zgroup', '.zarray', '.json')
+    text_extensions = (".zattrs", ".zgroup", ".zarray", ".json")
     if full_path.name.endswith(text_extensions):
         try:
             with open(full_path, "r", encoding="utf-8") as f:
@@ -59,11 +64,16 @@ async def get_file(file_path: str):
     # Serve other files as downloads
     return FileResponse(full_path, filename=full_path.name)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="FastAPI file server with HTTP/2 support")
+    parser = argparse.ArgumentParser(
+        description="FastAPI file server with HTTP/2 support"
+    )
     parser.add_argument("directory", type=str, help="Directory to serve")
     parser.add_argument("--port", type=int, default=8000, help="Port number")
-    parser.add_argument("--cert", type=str, default="cert.pem", help="SSL certificate file")
+    parser.add_argument(
+        "--cert", type=str, default="cert.pem", help="SSL certificate file"
+    )
     parser.add_argument("--key", type=str, default="key.pem", help="SSL key file")
     args = parser.parse_args()
 
@@ -82,7 +92,8 @@ if __name__ == "__main__":
     config = Config()
     config.bind = [f"0.0.0.0:{port}"]
     config.alpn_protocols = ["h2", "http/1.1"]  # Enable HTTP/2 and fallback to HTTP/1.1
-    config.accesslog = '-'
+    config.accesslog = "-"
 
     import asyncio
+
     asyncio.run(hypercorn.asyncio.serve(app, config))

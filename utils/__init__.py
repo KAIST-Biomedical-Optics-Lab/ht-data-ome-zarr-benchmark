@@ -5,6 +5,7 @@ from utils.squeeze_filter import Squeeze
 
 # codec registration
 from numcodecs.registry import register_codec
+
 register_codec(NvcompLZ4)
 register_codec(NvcompGDeflate)
 register_codec(SpatialDelta)

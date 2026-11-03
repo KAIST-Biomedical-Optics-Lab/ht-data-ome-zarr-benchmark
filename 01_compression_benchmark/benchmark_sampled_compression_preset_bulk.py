@@ -1,5 +1,3 @@
-
-
 """
 usage: benchmark_sampling_lossless.py [-h] src dst
 
@@ -19,6 +17,7 @@ import pandas as pd
 from tqdm import tqdm
 import sys
 from os import path
+
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from utils import *
 import zarr
@@ -28,22 +27,25 @@ from timeit import default_timer
 import os
 from glob import glob
 import tomllib
+
+
 def read_benchmark_recipe(recipe_file):
-    with open(recipe_file, 'rb') as f:
+    with open(recipe_file, "rb") as f:
         data = tomllib.load(f)
-    
+
     compression_recipes = []
-    for comp in data['compressors']:
-        name = comp['name']
-        levels = comp['level']
+    for comp in data["compressors"]:
+        name = comp["name"]
+        levels = comp["level"]
         for level in levels:
-            compression_recipes.append(f'{name}-{level}')
-    
+            compression_recipes.append(f"{name}-{level}")
+
     filters_recipes = []
-    for filt in data['filters']:
-        filters_recipes.append(filt['name'])
-    
+    for filt in data["filters"]:
+        filters_recipes.append(filt["name"])
+
     return compression_recipes, filters_recipes
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     parser.add_argument("bench_recipe", type=str, help="Path to the benchmark recipe")
     parser.add_argument("src", type=str, help="Path to the source npy-dask dataset.")
     parser.add_argument("dst", type=str, help="Path to the save benchmark result.")
-    parser.add_argument("--debug",action='store_true', help="Activate the debug mode.")
+    parser.add_argument("--debug", action="store_true", help="Activate the debug mode.")
     args = parser.parse_args()
     compression_recipes, filters_recipes = read_benchmark_recipe(args.bench_recipe)
     dst_path = args.dst
@@ -82,22 +84,28 @@ if __name__ == "__main__":
     compression_ratio_stack = np.zeros((num_rows,))
     compression_speed_stack = np.zeros((num_rows,))
     decompression_speed_stack = np.zeros((num_rows,))
-    np_arr = np.zeros(
-        shape = src_sampled_array.shape,
-        dtype = src_sampled_array.dtype
-    )
+    np_arr = np.zeros(shape=src_sampled_array.shape, dtype=src_sampled_array.dtype)
     # Benchmark
-    for idx ,(compressor, filters) in tqdm(enumerate(zarr_condition), unit = f" / {len(zarr_condition)}"):
+    for idx, (compressor, filters) in tqdm(
+        enumerate(zarr_condition), unit=f" / {len(zarr_condition)}"
+    ):
         z = zarr.create(
-            shape = src_sampled_array.shape,
-            chunks = chunksize,
-            dtype = src_sampled_array.dtype,
-            compressor = compressor,
-            filters = filters,
-            store = zarr.MemoryStore()
+            shape=src_sampled_array.shape,
+            chunks=chunksize,
+            dtype=src_sampled_array.dtype,
+            compressor=compressor,
+            filters=filters,
+            store=zarr.MemoryStore(),
         )
         start_time = default_timer()
-        da.store(src_sampled_array, z, lock=False, compute=True, return_stored=False, scheduler="threads")
+        da.store(
+            src_sampled_array,
+            z,
+            lock=False,
+            compute=True,
+            return_stored=False,
+            scheduler="threads",
+        )
         end_time = default_timer()
         elapsed_compression_time = end_time - start_time
         src_size = z.nbytes
@@ -109,18 +117,20 @@ if __name__ == "__main__":
             compression_speed = src_size / elapsed_compression_time
         # Check the decompression speed
         # decompression does not use dask
-        if compressor is not None and 'nvcomp' in compressor.codec_id:
-            np_arr = np.zeros(z.shape, dtype = z.dtype)
+        if compressor is not None and "nvcomp" in compressor.codec_id:
+            np_arr = np.zeros(z.shape, dtype=z.dtype)
             start_time = default_timer()
-            np_arr[:,:,:,:,slice(0,-1)] = np.array(z[:,:,:,:,slice(0,-1)], dtype = z.dtype)
-            np_arr[:,:,:,:,-1] = np.array(z[:,:,:,:,-1], dtype = z.dtype)
+            np_arr[:, :, :, :, slice(0, -1)] = np.array(
+                z[:, :, :, :, slice(0, -1)], dtype=z.dtype
+            )
+            np_arr[:, :, :, :, -1] = np.array(z[:, :, :, :, -1], dtype=z.dtype)
             end_time = default_timer()
         else:
             start_time = default_timer()
-            np_arr = np.array(z, dtype = z.dtype)
+            np_arr = np.array(z, dtype=z.dtype)
             end_time = default_timer()
         elapsed_decompression_time = end_time - start_time
-        
+
         if elapsed_decompression_time == 0:
             decompression_speed = np.nan
         else:
@@ -133,16 +143,27 @@ if __name__ == "__main__":
                 orig_fname = os.path.join(dst_path, f"original_data.npy")
                 if not os.path.exists(orig_fname):
                     np.save(orig_fname, src_sampled_array.compute())
-                np.save(os.path.join(dst_path, f"decompressed_data_{compression_option[idx]}_{filter_option[idx]}.npy"),np_arr)
+                np.save(
+                    os.path.join(
+                        dst_path,
+                        f"decompressed_data_{compression_option[idx]}_{filter_option[idx]}.npy",
+                    ),
+                    np_arr,
+                )
         compression_ratio_stack[idx] = ratio
         compression_speed_stack[idx] = compression_speed
         decompression_speed_stack[idx] = decompression_speed
         del z
-    df = pd.DataFrame({
-        "compression option" : compression_option,
-        "filter option" : filter_option,
-        "compression ratio" : compression_ratio_stack,
-        "compression speed (bytes/sec)" : compression_speed_stack,
-        "decompression speed (bytes/sec)" : decompression_speed_stack})
-    csv_id = len(glob(os.path.join(dst_path,"compression_benchmark*"))) + 1
-    df.to_csv(os.path.join(dst_path,f"compression_benchmark_{csv_id}.csv"),index=False)
+    df = pd.DataFrame(
+        {
+            "compression option": compression_option,
+            "filter option": filter_option,
+            "compression ratio": compression_ratio_stack,
+            "compression speed (bytes/sec)": compression_speed_stack,
+            "decompression speed (bytes/sec)": decompression_speed_stack,
+        }
+    )
+    csv_id = len(glob(os.path.join(dst_path, "compression_benchmark*"))) + 1
+    df.to_csv(
+        os.path.join(dst_path, f"compression_benchmark_{csv_id}.csv"), index=False
+    )

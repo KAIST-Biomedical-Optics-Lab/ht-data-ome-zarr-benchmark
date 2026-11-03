@@ -13,20 +13,21 @@ from pathlib import Path
 import pandas as pd
 import tomllib
 
+
 def load_config(config_path):
     """Load configuration from TOML file."""
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-    with open(config_path, 'rb') as f:
+    with open(config_path, "rb") as f:
         config = tomllib.load(f)
 
     # Validate configuration
-    if 'table_name' not in config or 'data_path' not in config:
+    if "table_name" not in config or "data_path" not in config:
         raise ValueError("Configuration must contain 'table_name' and 'data_path' keys")
 
-    if len(config['table_name']) != len(config['data_path']):
+    if len(config["table_name"]) != len(config["data_path"]):
         raise ValueError(
             f"Mismatch between table_name ({len(config['table_name'])}) "
             f"and data_path ({len(config['data_path'])}) lengths"
@@ -53,42 +54,47 @@ def load_and_label_csv(csv_path, dataset_name):
     df = pd.read_csv(csv_path)
 
     # Add dataset name as the first column
-    df.insert(0, 'Dataset', dataset_name)
+    df.insert(0, "Dataset", dataset_name)
 
     return df
+
 
 def rescale_bandwdith_byte2Mbyte(df):
-    df['compression speed (MiB/s)'] = df['compression speed (bytes/sec)']/2**20
-    df['decompression speed (MiB/s)'] = df['decompression speed (bytes/sec)']/2**20
-    del df['compression speed (bytes/sec)']
-    del df['decompression speed (bytes/sec)']
+    df["compression speed (MiB/s)"] = df["compression speed (bytes/sec)"] / 2**20
+    df["decompression speed (MiB/s)"] = df["decompression speed (bytes/sec)"] / 2**20
+    del df["compression speed (bytes/sec)"]
+    del df["decompression speed (bytes/sec)"]
     return df
 
+
 def prettify_filter(df):
-    df['filter option'] = df['filter option'].apply(lambda x: x.replace('BitRound-14', 'BitRound'))
+    df["filter option"] = df["filter option"].apply(
+        lambda x: x.replace("BitRound-14", "BitRound")
+    )
     return df
+
 
 def prettify_compressor(df):
     def extract_clevel(comp_option):
-        clevel = comp_option.rsplit('-')[-1]
+        clevel = comp_option.rsplit("-")[-1]
         if clevel == "none":
             return 0
         else:
             return int(clevel)
-    df['compressor'] = df['compression option'].apply(lambda x: x.rsplit('-')[0])
-    df['compression level'] = df['compression option'].apply(extract_clevel)
-    del df['compression option']
+
+    df["compressor"] = df["compression option"].apply(lambda x: x.rsplit("-")[0])
+    df["compression level"] = df["compression option"].apply(extract_clevel)
+    del df["compression option"]
     return df
+
 
 def groupby_options(df):
-    df = df.groupby([
-        'Dataset',
-        'compressor',
-        'compression level',
-        'filter option'
-    ]).mean()
+    df = df.groupby(
+        ["Dataset", "compressor", "compression level", "filter option"]
+    ).mean()
 
     return df
+
 
 def merge_benchmark_tables(config):
     """
@@ -102,7 +108,7 @@ def merge_benchmark_tables(config):
     """
     dataframes = []
 
-    for dataset_name, csv_path in zip(config['table_name'], config['data_path']):
+    for dataset_name, csv_path in zip(config["table_name"], config["data_path"]):
         df = load_and_label_csv(csv_path, dataset_name)
         dataframes.append(df)
 
@@ -141,14 +147,14 @@ def main():
         description="Generate comprehensive benchmark table from multiple CSV files"
     )
     parser.add_argument(
-        'config',
-        default='03_visualization/whole_benchmark_script.toml',
-        help='Path to TOML configuration file (default: 03_visualization/whole_benchmark_script.toml)'
+        "config",
+        default="03_visualization/whole_benchmark_script.toml",
+        help="Path to TOML configuration file (default: 03_visualization/whole_benchmark_script.toml)",
     )
     parser.add_argument(
-        'output_csv',
-        default='output/comprehensive-benchmark-table.csv',
-        help='Path for CSV output (default: output/comprehensive-benchmark-table.csv)'
+        "output_csv",
+        default="output/comprehensive-benchmark-table.csv",
+        help="Path for CSV output (default: output/comprehensive-benchmark-table.csv)",
     )
 
     args = parser.parse_args()
@@ -158,6 +164,7 @@ def main():
     merged_df = merge_benchmark_tables(config)
     # Save outputs
     save_outputs(merged_df, args.output_csv)
+
 
 if __name__ == "__main__":
     main()

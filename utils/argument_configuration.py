@@ -1,11 +1,18 @@
-
-
 def configure_compression(compressor):
     """Configure the compressor with the specified parameters."""
     from numcodecs import Blosc, GZip, BZ2, LZMA, LZ4, Zlib, Zstd, PCodec, ZFPY
     import zfpy
-    from imagecodecs.numcodecs import Brotli, Snappy, Zlibng, Lerc, Sperr, Sz3, register_codecs
+    from imagecodecs.numcodecs import (
+        Brotli,
+        Snappy,
+        Zlibng,
+        Lerc,
+        Sperr,
+        Sz3,
+        register_codecs,
+    )
     from utils.nvidia_compressor import NvcompLZ4, NvcompGDeflate
+
     if compressor == "none":
         return None  # No compression
     elif compressor.startswith("blosc"):
@@ -13,7 +20,7 @@ def configure_compression(compressor):
         blosc_info = compressor.split("-")
         codec = blosc_info[1]
         clevel = int(blosc_info[2])
-        shuffle = 0 if len(blosc_info) ==3 else int(blosc_info[3])
+        shuffle = 0 if len(blosc_info) == 3 else int(blosc_info[3])
         return Blosc(cname=codec, clevel=clevel, shuffle=shuffle)
     else:
         comp_info = compressor.split("-")
@@ -75,22 +82,35 @@ def configure_filters(filter_args):
     from numcodecs import FixedScaleOffset, Delta, Shuffle, BitRound
     from utils.spatial_filter import SpatialDelta
     from utils.squeeze_filter import Squeeze
+
     filters = []
     for filter_name in filter_args:
         if filter_name == "FixedScaleOffset":
-            filters.append(FixedScaleOffset(offset=0, scale=1e4, dtype="f4", astype="i2")) # (-3.2768, 3.2768)
+            filters.append(
+                FixedScaleOffset(offset=0, scale=1e4, dtype="f4", astype="i2")
+            )  # (-3.2768, 3.2768)
         elif filter_name == "Delta":
             filters.append(Delta(dtype="i2"))
         elif filter_name == "Squeeze":
             filters.append(Squeeze())
         elif filter_name.startswith("SpatialDelta"):
-            axes = eval(filter_name.split("-")[1]) if len(filter_name.split("-")) > 1 else (0,)
-            filters.append(SpatialDelta(axes = axes, dtype = "i2"))
+            axes = (
+                eval(filter_name.split("-")[1])
+                if len(filter_name.split("-")) > 1
+                else (0,)
+            )
+            filters.append(SpatialDelta(axes=axes, dtype="i2"))
         elif filter_name.startswith("Shuffle"):
-            elementsize = int(filter_name.split("-")[1]) if len(filter_name.split("-")) > 1 else 4
+            elementsize = (
+                int(filter_name.split("-")[1]) if len(filter_name.split("-")) > 1 else 4
+            )
             filters.append(Shuffle(elementsize=elementsize))
         elif filter_name.startswith("BitRound"):
-            keepbits = int(filter_name.split("-")[1]) if len(filter_name.split("-")) > 1 else (1 + 8 + 14) # float 32 w/ 4 digit accuracy
+            keepbits = (
+                int(filter_name.split("-")[1])
+                if len(filter_name.split("-")) > 1
+                else (1 + 8 + 14)
+            )  # float 32 w/ 4 digit accuracy
             filters.append(BitRound(keepbits=keepbits))
         else:
             raise ValueError(f"Unknown filter: {filter_name}")

@@ -4,6 +4,7 @@ import numpy as np
 from numcodecs.abc import Codec
 from numcodecs.compat import ensure_ndarray, ndarray_copy
 
+
 class SpatialDelta(Codec):
     """Codec to encode data as the difference between adjacent values.
 
@@ -59,7 +60,7 @@ class SpatialDelta(Codec):
             [24, 25, 26]]], dtype=int16)
     """
 
-    codec_id = 'spatial_delta'
+    codec_id = "spatial_delta"
 
     def __init__(self, axes, dtype, astype=None):
         self.axes = axes
@@ -69,7 +70,7 @@ class SpatialDelta(Codec):
         else:
             self.astype = np.dtype(astype)
         if self.dtype == np.dtype(object) or self.astype == np.dtype(object):
-            raise ValueError('object arrays are not supported')
+            raise ValueError("object arrays are not supported")
 
     def encode(self, buf):
         # normalise input
@@ -77,13 +78,15 @@ class SpatialDelta(Codec):
 
         # get dimensional information
         nd = arr.ndim
-        valid_axes = tuple(filter(lambda axis: isinstance(axis, int) and -nd <= axis < nd, self.axes))
+        valid_axes = tuple(
+            filter(lambda axis: isinstance(axis, int) and -nd <= axis < nd, self.axes)
+        )
 
         # setup encoded output
-        enc = np.zeros_like(arr, dtype = self.astype)
+        enc = np.zeros_like(arr, dtype=self.astype)
 
         # set first element
-        
+
         init_slice = [slice(None)] * nd
         axis = valid_axes[0]
         init_slice[axis] = slice(0, 1)
@@ -102,7 +105,7 @@ class SpatialDelta(Codec):
             slice2[axis] = slice(None, -1)
             slice1 = tuple(slice1)
             slice2 = tuple(slice2)
-            op(arr[slice1], arr[slice2], out = enc[slice1])
+            op(arr[slice1], arr[slice2], out=enc[slice1])
             arr = enc
 
         return enc
@@ -113,14 +116,16 @@ class SpatialDelta(Codec):
 
         # get dimensional information
         nd = enc.ndim
-        valid_axes = tuple(filter(lambda axis: isinstance(axis, int) and -nd <= axis < nd, self.axes))
+        valid_axes = tuple(
+            filter(lambda axis: isinstance(axis, int) and -nd <= axis < nd, self.axes)
+        )
 
         # setup decoded output
         dec = np.zeros_like(enc, dtype=self.dtype)
 
         # decode differences
         for axis in valid_axes:
-            np.cumsum(enc, axis = axis, out = dec)
+            np.cumsum(enc, axis=axis, out=dec)
             enc = dec
 
         # handle output
@@ -130,11 +135,16 @@ class SpatialDelta(Codec):
 
     def get_config(self):
         # override to handle encoding dtypes
-        return dict(id=self.codec_id, axes=self.axes, dtype=self.dtype.str, astype=self.astype.str)
+        return dict(
+            id=self.codec_id,
+            axes=self.axes,
+            dtype=self.dtype.str,
+            astype=self.astype.str,
+        )
 
     def __repr__(self):
-        r = f'{type(self).__name__}(axes={self.axes}, dtype={self.dtype.str!r}'
+        r = f"{type(self).__name__}(axes={self.axes}, dtype={self.dtype.str!r}"
         if self.astype != self.dtype:
-            r += f', astype={self.astype.str!r}'
-        r += ')'
+            r += f", astype={self.astype.str!r}"
+        r += ")"
         return r
