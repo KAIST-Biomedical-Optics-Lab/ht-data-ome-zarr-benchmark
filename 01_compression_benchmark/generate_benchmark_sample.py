@@ -33,6 +33,7 @@ def main():
     parser.add_argument("chunk_shape", help="Chunk shape.")
     parser.add_argument("edge_padding", default = "(0,0,0,0,0)", help="Number pixels not to be selected")
     parser.add_argument("--channel", type=int, help="Selected channel.")
+    parser.add_argument("--dtype", type=str, help="Cast sampled chunks to this dtype (e.g. float32).")
     args = parser.parse_args()
     # Validate source path
     src_path = args.src
@@ -47,6 +48,8 @@ def main():
     src_data = src_data[src_slices] # prevent potential errors merged at stitching
     if args.channel is not None:
         src_data = src_data[:,args.channel:args.channel+1,:,:,:]
+    if args.dtype is not None:
+        src_data = src_data.astype(args.dtype)
     # Define chunk: check whether 'channel' axes exists
     # First, get the `args.numbers` number of chunks' indices randomly.
     input_chunk_shape = eval(args.chunk_shape)
