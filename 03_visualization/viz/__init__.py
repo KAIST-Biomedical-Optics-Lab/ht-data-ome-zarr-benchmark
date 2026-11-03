@@ -12,6 +12,7 @@ from .benchmark_plots import (
     plot_bottleneck_ranking,
     plot_compression_ratio,
     plot_filter_boxplot,
+    plot_method_comparison,
     plot_throughput,
 )
 from .config import (
@@ -48,6 +49,7 @@ __all__ = [
     "plot_bottleneck_ranking",
     "plot_compression_ratio",
     "plot_filter_boxplot",
+    "plot_method_comparison",
     "plot_throughput",
     "render_dataset_slices",
 ]

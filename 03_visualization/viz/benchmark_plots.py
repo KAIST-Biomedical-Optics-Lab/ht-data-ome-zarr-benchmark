@@ -221,3 +221,65 @@ def plot_bottleneck_ranking(
         )
 
     return _save_and_return(fig, ax, save_path, close_fig)
+
+
+def plot_method_comparison(
+    grouped_tables: dict[str, pd.DataFrame],
+    methods: list[dict[str, str]],
+    metric: str = "compression ratio",
+    save_path: str | Path | None = None,
+    ax: Axes | None = None,
+    close_fig: bool = True,
+    bar_label_fmt: str | None = None,
+    **kwargs: Any,
+) -> tuple[Figure, Axes]:
+    """Plot grouped bars of one metric for selected (compression, filter) pairs per dataset.
+
+    Args:
+        grouped_tables: Dataset display name -> output of compute_grouped_benchmark.
+        methods: Each item has 'compression' and 'filter' keys, and optional
+            'label' and 'color'. Pairs missing in a dataset are left blank.
+        metric: Column to plot (e.g. 'compression ratio').
+        bar_label_fmt: Optional format string (e.g. '{:.2f}') for bar value labels.
+    """
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = ax.figure  # type: ignore[assignment]
+
+    if kwargs:
+        ax.set(**kwargs)
+
+    names = list(grouped_tables)
+    x = np.arange(len(names))
+    width = 0.8 / max(len(methods), 1)
+
+    for i, m in enumerate(methods):
+        key = (m["compression"], m["filter"])
+        vals = [
+            float(grp.loc[key, metric]) if key in grp.index else np.nan
+            for grp in grouped_tables.values()
+        ]
+        bars = ax.bar(
+            x + (i - (len(methods) - 1) / 2) * width,
+            vals,
+            width=width * 0.92,
+            color=m.get("color"),
+            edgecolor="black",
+            linewidth=0.6,
+            label=m.get("label", f"{m['compression']} + {m['filter']}"),
+        )
+        if bar_label_fmt is not None:
+            ax.bar_label(
+                bars,
+                labels=[
+                    bar_label_fmt.format(v) if np.isfinite(v) else "" for v in vals
+                ],
+                fontsize=7,
+                padding=2,
+            )
+
+    ax.set_xticks(x, names, rotation=20, ha="right")
+    ax.legend(fontsize=7, loc="upper left", bbox_to_anchor=(1.0, 1.0))
+
+    return _save_and_return(fig, ax, save_path, close_fig)
