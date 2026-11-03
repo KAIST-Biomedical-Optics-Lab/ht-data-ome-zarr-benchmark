@@ -1,0 +1,14 @@
+[[compressors]]
+name = "SZ3"
+level = [1]
+
+[[compressors]]
+name = "SPERR"
+level = [1]
+
+[[compressors]]
+name = "LERC"
+level = [1]
+
+[[filters]]
+name = ["Squeeze"]

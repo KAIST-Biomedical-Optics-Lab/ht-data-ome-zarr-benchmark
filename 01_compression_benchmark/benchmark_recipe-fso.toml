@@ -1,0 +1,13 @@
+[[compressors]]
+name = "zstd"
+level = [1, 11, 22]
+
+[[compressors]]
+name = "blosc-zstd"
+level = [1, 5, 9]
+
+[[filters]]
+name = ["FixedScaleOffset"]
+
+[[filters]]
+name = ["FixedScaleOffset", "Shuffle-2"]

@@ -1,0 +1,6 @@
+[[compressors]]
+name = "PCodec"
+level = [0, 6, 12]
+
+[[filters]]
+name = ["FixedScaleOffset"]
