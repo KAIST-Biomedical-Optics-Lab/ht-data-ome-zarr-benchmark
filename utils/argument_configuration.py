@@ -64,9 +64,9 @@ def configure_compression(compressor):
             # Vectorized Zlib implementation
             return Zlibng(level=_get_int_level(5))
         elif codec.lower() == "lerc":
-            return Lerc(level=1e-4)
+            return Lerc(level=0.99e-4)
         elif codec.lower() == "sperr":
-            return Sperr(mode="pwe", level=1e-4)
+            return Sperr(mode="pwe", level=0.99e-4)
         elif codec.lower() == "sz3":
             return Sz3(shape=(32, 256, 256), dtype="float32", abs=1e-4)
         elif codec == "NvcompLZ4":
