@@ -7,6 +7,7 @@ import argparse
 import os
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 os.environ.setdefault("MPLCONFIGDIR", tempfile.gettempdir())
@@ -16,6 +17,9 @@ os.environ.setdefault("MPLBACKEND", "Agg")  # file output only; avoids the PyQt5
 VIZ_DIR = Path(__file__).resolve().parent
 if str(VIZ_DIR) not in sys.path:
     sys.path.insert(0, str(VIZ_DIR))
+
+import matplotlib.pyplot as plt
+import pandas as pd
 
 from viz import (
     BenchmarkConfig,
@@ -28,8 +32,10 @@ from viz import (
     plot_bottleneck_ranking,
     plot_compression_ratio,
     plot_filter_boxplot,
+    plot_method_comparison,
     plot_throughput,
 )
+from viz.config import resolve_config_file
 
 
 def run_overall_visualizations(
@@ -135,6 +141,67 @@ def run_bottleneck_visualization(
     return save_path
 
 
+MIB = 2**20
+COMPARISON_METRICS = {
+    "compression ratio": ("Compression ratio (float32 basis)", "{:.2f}", 1.0),
+    "compression speed (bytes/sec)": ("Compression speed (MiB/s)", "{:.0f}", MIB),
+    "decompression speed (bytes/sec)": ("Decompression speed (MiB/s)", "{:.0f}", MIB),
+}
+
+
+def load_comparison_section(config_path: str) -> dict:
+    """Return the [htpack] section of the TOML config (empty dict if absent)."""
+    with open(resolve_config_file(config_path), "rb") as f:
+        return tomllib.load(f).get("htpack", {})
+
+
+def run_method_comparison(
+    config: BenchmarkConfig,
+    section: dict,
+    tables: dict,
+    output_dir: Path,
+    fmt: str = "svg",
+) -> list[Path]:
+    """Generate method comparison bar charts and table from the [htpack] section."""
+    methods = section.get("fso_comparison", [])
+    if not methods:
+        raise ValueError("No [[htpack.fso_comparison]] entries in config")
+    out_dir = output_dir / section.get("fso_subdir", "view-bench-htpack-fso")
+    grouped = {config.datasets[k].name: compute_grouped_benchmark(df) for k, df in tables.items()}
+
+    saved: list[Path] = []
+    rows = []
+    for metric, (ylabel, label_fmt, scale) in COMPARISON_METRICS.items():
+        scaled = {name: grp.assign(**{metric: grp[metric] / scale}) for name, grp in grouped.items()}
+        fig, ax = plt.subplots(figsize=(11, 4.5))
+        plot_method_comparison(
+            scaled, methods, metric=metric, ax=ax, close_fig=False, bar_label_fmt=label_fmt, ylabel=ylabel
+        )
+        if scale != 1.0:
+            ax.set_yscale("log")
+        fig.tight_layout()
+        save_path = out_dir / f"comparison-{metric.split('(')[0].strip()}.{fmt}"
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=200)
+        plt.close(fig)
+        saved.append(save_path)
+        for m in methods:
+            key = (m["compression"], m["filter"])
+            for name, grp in scaled.items():
+                if key in grp.index:
+                    rows.append({"dataset": name, "method": m.get("label", f"{key[0]} + {key[1]}"),
+                                 "compression option": key[0], "filter option": key[1],
+                                 "metric": ylabel, "value": float(grp.loc[key, metric])})
+
+    table = pd.DataFrame(rows).pivot_table(
+        index=["method", "compression option", "filter option", "metric"], columns="dataset", values="value"
+    )
+    table_path = out_dir / "comparison-table.csv"
+    table.to_csv(table_path)
+    print(f"saved {table_path}")
+    return saved
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments for benchmark visualization."""
     parser = argparse.ArgumentParser(
@@ -147,7 +214,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--figures",
-        choices=["all", "overall", "filter", "bottleneck"],
+        choices=["all", "overall", "filter", "bottleneck", "comparison"],
         default="all",
         help="Which figure suite to generate (default: all)",
     )
@@ -223,6 +290,14 @@ def main(argv: list[str] | None = None) -> int:
     ):
         saved_files.append(
             run_bottleneck_visualization(config, tables, output_dir, fmt=args.format)
+        )
+
+    comparison = load_comparison_section(args.config)
+    if args.figures in ("all", "comparison") and (
+        args.figures == "comparison" or comparison
+    ):
+        saved_files.extend(
+            run_method_comparison(config, comparison, tables, output_dir, fmt=args.format)
         )
 
     print(f"\nGenerated {len(saved_files)} figure(s) in {output_dir}")
