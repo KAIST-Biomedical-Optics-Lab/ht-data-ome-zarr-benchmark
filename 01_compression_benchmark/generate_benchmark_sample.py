@@ -19,6 +19,11 @@ import argparse
 import os
 import numpy as np
 import dask.array as da
+import sys
+from os import path
+
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+import utils.numcodecs_compat  # noqa: F401  (numcodecs>=0.16 shim; must precede ome_zarr/zarr)
 from ome_zarr.io import parse_url
 from ome_zarr.reader import Reader
 from numcodecs import *

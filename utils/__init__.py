@@ -1,3 +1,4 @@
+import utils.numcodecs_compat  # noqa: F401  (must run before zarr is imported)
 from utils.spatial_filter import SpatialDelta
 from utils.argument_configuration import configure_compression, configure_filters
 from utils.nvidia_compressor import NvcompLZ4, NvcompGDeflate

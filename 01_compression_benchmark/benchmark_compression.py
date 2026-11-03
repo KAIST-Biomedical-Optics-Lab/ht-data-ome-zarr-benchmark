@@ -17,16 +17,16 @@ optional arguments:
 import argparse
 import time
 import os
+import sys
+from os import path
+
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+from utils import *  # must precede zarr (numcodecs>=0.16 shim)
 import zarr
 from ome_zarr.io import parse_url
 from ome_zarr.reader import Reader
 from ome_zarr.writer import write_image
 from ome_zarr.format import FormatV04
-import sys
-from os import path
-
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from utils import *
 
 
 def main():
