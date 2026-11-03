@@ -66,7 +66,7 @@ def configure_compression(compressor):
         elif codec.lower() == "lerc":
             return Lerc(level=0.99e-4)
         elif codec.lower() == "sperr":
-            return Sperr(mode="pwe", level=0.99e-4)
+            return Sperr(mode="pwe", level=0.99e-4, numthreads=1)
         elif codec.lower() == "sz3":
             return Sz3(shape=(32, 256, 256), dtype="float32", abs=1e-4)
         elif codec == "NvcompLZ4":
