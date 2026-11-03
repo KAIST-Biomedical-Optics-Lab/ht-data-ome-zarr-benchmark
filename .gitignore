@@ -3,6 +3,7 @@
 # python
 .venv
 __pycache__
+uv.lock
 # data path
 data/
 output/
