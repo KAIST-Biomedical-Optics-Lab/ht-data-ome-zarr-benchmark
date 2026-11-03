@@ -15,9 +15,10 @@ def rename_squeeze_filter_to_none(df):
 
 
 def merge_csv_files(input_glob, output_path):
-    csv_files = glob.glob(input_glob)
+    patterns = [input_glob] if isinstance(input_glob, str) else input_glob
+    csv_files = [file for pattern in patterns for file in glob.glob(pattern)]
     if not csv_files:
-        print(f"No CSV files found for pattern: {input_glob}")
+        print(f"No CSV files found for pattern: {patterns}")
         return
 
     dataframes = []
@@ -49,7 +50,9 @@ def main():
         description="Merge multiple CSV files with the same columns into one CSV file."
     )
     parser.add_argument(
-        "input_glob", help="Glob pattern for input CSV files (e.g., './data/*.csv')"
+        "input_glob",
+        nargs="+",
+        help="Glob pattern(s) for input CSV files (e.g., './data/*.csv'). The first matched file is kept whole; the first row of the others is dropped.",
     )
     parser.add_argument("output_path", help="Path to save the merged CSV file")
     args = parser.parse_args()
