@@ -4,7 +4,7 @@ def configure_compression(compressor):
     """Configure the compressor with the specified parameters."""
     from numcodecs import Blosc, GZip, BZ2, LZMA, LZ4, Zlib, Zstd, PCodec, ZFPY
     import zfpy
-    from imagecodecs.numcodecs import Brotli, Snappy, Zlibng
+    from imagecodecs.numcodecs import Brotli, Snappy, Zlibng, Lerc, Sperr, Sz3, register_codecs
     from utils.nvidia_compressor import NvcompLZ4, NvcompGDeflate
     if compressor == "none":
         return None  # No compression
@@ -18,24 +18,32 @@ def configure_compression(compressor):
     else:
         comp_info = compressor.split("-")
         codec = comp_info[0]
-        level = int(comp_info[1])
+
+        def _get_int_level(default=1):
+            if len(comp_info) > 1:
+                try:
+                    return int(comp_info[1])
+                except ValueError:
+                    pass
+            return default
+
         if codec == "gzip":
-            return GZip(level=level)
+            return GZip(level=_get_int_level(5))
         elif codec == "bzip2":
-            return BZ2(level=level)
+            return BZ2(level=_get_int_level(5))
         elif codec == "lzma":
-            return LZMA(preset = level)
+            return LZMA(preset=_get_int_level(5))
         elif codec == "lz4":
-            return LZ4(acceleration=level)
+            return LZ4(acceleration=_get_int_level(1))
         elif codec == "zlib":
             # deflate compression
-            return Zlib(level=level)
+            return Zlib(level=_get_int_level(5))
         elif codec == "zstd":
-            return Zstd(level=level)
+            return Zstd(level=_get_int_level(3))
         elif codec == "PCodec":
-            return PCodec(level=level)
+            return PCodec(level=_get_int_level(6))
         elif codec == "Brotli":
-            return Brotli(level=level)
+            return Brotli(level=_get_int_level(6))
         elif codec == "Snappy":
             return Snappy()
         elif codec == "LOSSLESS_ZFP":
@@ -47,14 +55,17 @@ def configure_compression(compressor):
         # hardware accelerated codecs
         elif codec == "Zlibng":
             # Vectorized Zlib implementation
-            return Zlibng(level=level)
-        elif codec == "SZ3":
-            from utils.pysz_codec import SZ3Codec
-            return SZ3Codec(abs_error=1e-4)
+            return Zlibng(level=_get_int_level(5))
+        elif codec.lower() == "lerc":
+            return Lerc(level=1e-4)
+        elif codec.lower() == "sperr":
+            return Sperr(mode="pwe", level=1e-4)
+        elif codec.lower() == "sz3":
+            return Sz3(shape=(32, 256, 256), dtype="float32", abs=1e-4)
         elif codec == "NvcompLZ4":
             return NvcompLZ4()
         elif codec == "NvcompGDeflate":
-            return NvcompGDeflate(level=level)
+            return NvcompGDeflate(level=_get_int_level(1))
         else:
             raise ValueError(f"Unsupported compressor: {codec}")
 
