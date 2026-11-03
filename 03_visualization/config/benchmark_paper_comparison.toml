@@ -1,0 +1,45 @@
+# Minimal comparison for the HT Fourier manuscript (HeLa, organoid):
+# the manuscript's codecs (Fourier = HTPackFourier, BitRound-Pcodec) plus PCodec + FixedScaleOffset, SZ3 and SPERR.
+#   visualize_htpack.py --config 03_visualization/config/benchmark_paper_comparison.toml
+# Tables: output/merged-<ds>-8G-errorbounded.csv (built by run-errorbounded-report.ps1).
+# Note: the benchmark's BitRound keeps 14 mantissa bits (manuscript: 13); zfp is not included (no matching run).
+
+[general]
+output_dir = "figure"
+
+[datasets]
+HeLa = { name = "HeLa", path = "output/merged-HeLa-8G-errorbounded.csv" }
+organoid = { name = "Organoid", path = "output/merged-organoid-8G-errorbounded.csv" }
+
+[htpack]
+fso_subdir = "view-bench-paper-comparison"
+
+[[htpack.fso_comparison]]
+compression = "HTPackFourier-1"
+filter = "none"
+label = "Fourier (HTPack, eps=1e-4)"
+color = "#8e44ad"
+
+[[htpack.fso_comparison]]
+compression = "PCodec-6"
+filter = "BitRound-14"
+label = "BitRound-14 + PCodec-6"
+color = "#95a5a6"
+
+[[htpack.fso_comparison]]
+compression = "PCodec-6"
+filter = "FixedScaleOffset"
+label = "FSO + PCodec-6"
+color = "#27ae60"
+
+[[htpack.fso_comparison]]
+compression = "SZ3-1"
+filter = "none"
+label = "SZ3 (abs 1e-4)"
+color = "#16a085"
+
+[[htpack.fso_comparison]]
+compression = "SPERR_G99-1"
+filter = "none"
+label = "SPERR (pwe 0.99e-4)"
+color = "#2c3e50"

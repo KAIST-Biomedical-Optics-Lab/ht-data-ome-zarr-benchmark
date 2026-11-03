@@ -1,0 +1,6 @@
+[[compressors]]
+name = "HTPackFourier"
+level = [1]
+
+[[filters]]
+name = ["Squeeze"]

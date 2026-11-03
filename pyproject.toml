@@ -3,10 +3,11 @@ name = "12-code"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115.8",
     "h5py>=3.12.1",
+    "htpack",
     "hypercorn>=0.17.3",
     "imagecodecs>=2025.8.2",
     "imagecodecs-numcodecs>=2025.3.30",
@@ -32,3 +33,6 @@ dependencies = [
     "zarr>=2,<3",
     "zfpy==1.0.1", # numcodecs cannot parse '1.0.1.post0'
 ]
+
+[tool.uv.sources]
+htpack = { path = "../htpack", editable = true }

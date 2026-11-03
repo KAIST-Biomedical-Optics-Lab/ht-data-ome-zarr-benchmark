@@ -24,3 +24,8 @@ $benchmark_recipe="01_compression_benchmark/benchmark_recipe-fso-pcodec.toml"
 
 uv run python $benchmark_code $benchmark_recipe data/test-HeLa-8G output/bench-HeLa-8G-fso-pcodec
 uv run python $benchmark_code $benchmark_recipe data/test-organoid-8G output/bench-organoid-8G-fso-pcodec
+
+$benchmark_recipe="01_compression_benchmark/benchmark_recipe-htpack.toml"
+
+uv run python $benchmark_code $benchmark_recipe data/test-HeLa-8G output/bench-HeLa-8G-htpack
+uv run python $benchmark_code $benchmark_recipe data/test-organoid-8G output/bench-organoid-8G-htpack

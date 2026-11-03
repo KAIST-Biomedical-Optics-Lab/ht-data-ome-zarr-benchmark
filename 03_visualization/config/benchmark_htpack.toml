@@ -1,0 +1,90 @@
+# HTPack benchmark figures.
+#   - Overall / filter / bottleneck: visualize_benchmark.py --config 03_visualization/config/benchmark_htpack.toml
+#   - HTPack vs FixedScaleOffset comparison ([htpack] section): visualize_htpack.py --config (same file)
+
+[general]
+output_dir = "figure"
+overall_subdir = "view-bench-1-overall-htpack"
+filter_subdir = "view-bench-3-filter-htpack"
+bottleneck_subdir = "view-bench-5-bottlneck-htpack"
+
+[datasets]
+bacteria = { name = "Bacteria", path = "output/merged-bacteria-8G-htpack.csv" }
+HeLa = { name = "HeLa", path = "output/merged-HeLa-8G-htpack.csv" }
+embryo = { name = "Embryo", path = "output/merged-embryo-8G-htpack.csv" }
+organoid = { name = "Organoid", path = "output/merged-organoid-8G-htpack.csv" }
+tissue-on = { name = "Tissue (on-diagonal)", path = "output/merged-tissue-on-8G-htpack.csv" }
+
+[compression_options]
+gzip = [1, 5, 9]
+zlib = [1, 5, 9]
+bzip2 = [1, 5, 9]
+lzma = [1, 5, 9]
+lz4 = [1]
+Snappy = [0]
+zstd = [1, 11, 22]
+PCodec = [0, 6, 12]
+blosc-zlib = [1, 5, 9]
+blosc-lz4 = [1, 5, 9]
+blosc-zstd = [1, 5, 9]
+LOSSLESS_ZFP = [0]
+LOSSY_ZFP = [0]
+HTPackFourier = [1]
+
+[filter_options]
+names = ["none", "Shuffle", "BitRound-14", "BitRound-14-Shuffle"]
+throughput_names = ["Shuffle", "none"]
+
+[filter_display_colors]
+none = ["#1f78b4", "#63a3cc", "#a6cee3"]
+Shuffle = ["#33a02c", "#73c05b", "#b2df8a"]
+BitRound-14 = ["#e31a1c", "#ef5a5b", "#fb9a99"]
+BitRound-14-Shuffle = ["#ff7f00", "#fe9f38", "#fdbf6f"]
+
+[defaults.axis_limits]
+"compression ratio" = { ylim = [1.0, 10.0], yscale = "linear" }
+"compression speed (bytes/sec)" = { ylim = [10000000.0, 3162277660.2], yscale = "log" }
+"decompression speed (bytes/sec)" = { ylim = [10000000.0, 3162277660.2], yscale = "log" }
+
+[bottleneck]
+base_transfer_rate_range = [18, 36, 3]
+exclude_compressors = ["none", "Nvcomp", "Zlibng"]
+exclude_filters = ["BitRound", "FixedScaleOffset"]
+# HTPack rows carry filter "none" (Squeeze renamed at merge), so they must be listed here
+none_filter_compressors = ["PCodec", "ZFP", "HTPack"]
+
+# ---------------------------------------------------------------------------
+# HTPack vs FixedScaleOffset comparison (visualize_htpack.py)
+# ---------------------------------------------------------------------------
+[htpack]
+fso_subdir = "view-bench-htpack-fso"
+
+[[htpack.fso_comparison]]
+compression = "HTPackFourier-1"
+filter = "none"
+label = "HTPackFourier (eps=1e-4)"
+color = "#8e44ad"
+
+[[htpack.fso_comparison]]
+compression = "PCodec-6"
+filter = "BitRound-14"
+label = "PCodec-6 + BitRound-14"
+color = "#95a5a6"
+
+[[htpack.fso_comparison]]
+compression = "blosc-zstd-1"
+filter = "FixedScaleOffset-Shuffle-2"
+label = "blosc-zstd-1 + FSO + Shuffle"
+color = "#2980b9"
+
+[[htpack.fso_comparison]]
+compression = "blosc-zstd-9"
+filter = "FixedScaleOffset-Shuffle-2"
+label = "blosc-zstd-9 + FSO + Shuffle"
+color = "#1f618d"
+
+[[htpack.fso_comparison]]
+compression = "PCodec-6"
+filter = "FixedScaleOffset"
+label = "PCodec-6 + FSO"
+color = "#27ae60"

@@ -11,6 +11,7 @@ def configure_compression(compressor):
         Sz3,
         register_codecs,
     )
+    from htpack import HTPackCodec
     from utils.nvidia_compressor import NvcompLZ4, NvcompGDeflate
 
     if compressor == "none":
@@ -73,6 +74,8 @@ def configure_compression(compressor):
             return NvcompLZ4()
         elif codec == "NvcompGDeflate":
             return NvcompGDeflate(level=_get_int_level(1))
+        elif codec == "HTPackFourier":
+            return HTPackCodec(mode="fourier", epsilon=1e-4)
         else:
             raise ValueError(f"Unsupported compressor: {codec}")
 

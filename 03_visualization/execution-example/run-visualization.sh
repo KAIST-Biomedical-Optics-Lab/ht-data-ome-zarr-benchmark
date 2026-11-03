@@ -9,3 +9,6 @@ uv run python 03_visualization/visualize_benchmark.py --config 03_visualization/
 
 echo "=== Generating Slice Images ==="
 uv run python 03_visualization/generate_slice_images.py --config 03_visualization/config/slice_visualization.toml
+
+echo "=== Generating HTPack Benchmark Figures ==="
+uv run python 03_visualization/visualize_benchmark.py --config 03_visualization/config/benchmark_htpack.toml
