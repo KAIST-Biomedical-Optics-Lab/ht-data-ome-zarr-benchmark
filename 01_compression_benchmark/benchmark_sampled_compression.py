@@ -105,7 +105,7 @@ def main(args=None, verbose=True):
     else:
         decompression_speed = src_size / elapsed_decompression_time
     # Check the decompressed data
-    if not da.allclose(src_sampled_array, np_arr, atol=1e-4):
+    if not da.allclose(src_sampled_array, np_arr, rtol=0, atol=1e-4):
         print("Warning: Decompressed data does not match the original data!!")
     if verbose:
         print(f"Compression ratio: {ratio:.2f}")

@@ -126,7 +126,7 @@ if __name__ == "__main__":
         else:
             decompression_speed = src_size / elapsed_decompression_time
         # Check the decompressed data
-        if not da.allclose(src_sampled_array, np_arr, atol=1e-4):
+        if not da.allclose(src_sampled_array, np_arr, rtol=0, atol=1e-4):
             print("\nDecompressed data does not match the original data.")
             print(compression_option[idx], filter_option[idx])
             if args.debug:
