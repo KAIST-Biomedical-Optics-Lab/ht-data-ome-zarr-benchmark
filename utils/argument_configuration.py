@@ -50,8 +50,7 @@ def configure_compression(compressor):
             return Zlibng(level=level)
         elif codec == "SZ3":
             from utils.pysz_codec import SZ3Codec
-            abs_error = 1e-4 if level <= 0 else level * 1e-4
-            return SZ3Codec(abs_error=abs_error)
+            return SZ3Codec(abs_error=1e-4)
         elif codec == "NvcompLZ4":
             return NvcompLZ4()
         elif codec == "NvcompGDeflate":
