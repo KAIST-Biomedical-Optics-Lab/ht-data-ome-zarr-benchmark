@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 os.environ.setdefault("MPLCONFIGDIR", tempfile.gettempdir())
+os.environ.setdefault("MPLBACKEND", "Agg")  # file output only; avoids the PyQt5 backend
 
 # Ensure 03_visualization is importable regardless of working directory
 VIZ_DIR = Path(__file__).resolve().parent
