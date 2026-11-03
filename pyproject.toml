@@ -24,6 +24,7 @@ dependencies = [
     "paramiko>=3.5.1",
     "pcodec>=0.3.5",
     "pyqt5-qt5==5.15.2",
+    "pysz>=1.1.0",
     "scipy>=1.15.1",
     "tcfile>=2024.11.0",
     "tqdm>=4.67.1",
