@@ -33,10 +33,10 @@ If you want to choose other options, please see package dependencies at `pyproje
 
 All python files are scripts. They are executed with the followed format: `uv run python SCRIPT_NAME.py ARGS...` or `python SCRIPT_NAME.py ARGS...`.
 
-For a quick execution, run the following script or jupyter notebook sequentially:
+For a quick execution, run the following scripts sequentially:
  1. `01_compression_benchmark/execution-example/generate-benchmark.sh`
  2. `01_compression_benchmark/execution-example/bulk-benchmark.sh`
- 3. `03_visualization/view_compression_benchmark.ipynb`
+ 3. `03_visualization/execution-example/run-visualization.sh` (or `uv run python 03_visualization/visualize_benchmark.py`)
 
 ### Descripion of each directories and executable files
  - `00_data_processing` : You don't have use it basically for benchmarking. It is the preprocessing tools of converting non-OME-Zarr files into OME-zarr files.
@@ -51,9 +51,11 @@ For a quick execution, run the following script or jupyter notebook sequentially
     - `benchmark_sampled_compression_preset_bulk.py`: Run multiple benchmark sequentially and return the result as a table. The example of benchmarking list is at `01_compression_benchmark/benchmark_recipe.toml`.
  - `02_remote_access` : Not described in article. Simple server to validate the remote access of OME-Zarr file through network.
     - `simple-server.py`: Simple OME-Zarr server. It is slow because it does not support parallel transfer. The running example is at `02_remote_access\example\simple-server.sh`.
- - `03_visualization` : Notebook of visualizing benchmark results
-    - `view_compression_benchmark.ipynb`: Visualize and save the analsys results. They are used to draw article's figures.
-    - `view_slice_image.ipynb`: Save the sections of holotomographic data as images.
+ - `03_visualization` : CLI scripts, modular Python library (`viz/`), declarative configurations (`config/`), and interactive notebook wrappers for visualizing benchmark results
+    - `visualize_benchmark.py`: CLI script to generate overall compression ratio/throughput charts, filter boxplots, and network bottleneck ranking figures using `config/benchmark_visualization.toml` (or `config/benchmark_gpu.toml`).
+    - `generate_slice_images.py`: CLI script to extract and save 9 orthogonal cross-sectional slices of OME-Zarr holotomographic volumes using `config/slice_visualization.toml`.
+    - `generate_whole_benchmark_table.py`: Merge multiple dataset CSV files into a single summary table using `whole_benchmark_script.toml`.
+    - `view_compression_benchmark.ipynb` & `view_slice_image.ipynb`: Lightweight interactive notebook wrappers importing `viz`.
 The results of the benchmarks will be documented here.
 
 ## Troubleshooting

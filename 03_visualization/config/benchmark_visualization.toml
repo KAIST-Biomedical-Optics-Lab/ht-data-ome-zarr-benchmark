@@ -1,0 +1,55 @@
+[general]
+output_dir = "figure"
+overall_subdir = "view-bench-1-overall"
+filter_subdir = "view-bench-3-filter"
+bottleneck_subdir = "view-bench-5-bottlneck"
+
+[datasets]
+bacteria = { name = "Bacteria", path = "output/merged-bacteria-8G.csv" }
+HeLa = { name = "HeLa", path = "output/merged-HeLa-8G.csv" }
+embryo = { name = "Embryo", path = "output/merged-embryo-8G.csv" }
+organoid = { name = "Organoid", path = "output/merged-organoid-8G.csv" }
+tissue-on = { name = "Tissue (on-diagonal)", path = "output/merged-tissue-on-8G.csv" }
+tissue-off = { name = "Tissue (off-diagonal)", path = "output/merged-tissue-off-8G.csv" }
+
+[compression_options]
+gzip = [1, 5, 9]
+zlib = [1, 5, 9]
+bzip2 = [1, 5, 9]
+lzma = [1, 5, 9]
+lz4 = [1]
+Snappy = [0]
+zstd = [1, 11, 22]
+PCodec = [0, 6, 12]
+blosc-zlib = [1, 5, 9]
+blosc-lz4 = [1, 5, 9]
+blosc-zstd = [1, 5, 9]
+LOSSLESS_ZFP = [0]
+LOSSY_ZFP = [0]
+
+[filter_options]
+names = ["none", "Shuffle", "BitRound-14", "BitRound-14-Shuffle"]
+throughput_names = ["Shuffle", "none"]
+
+[filter_display_colors]
+none = ["#1f78b4", "#63a3cc", "#a6cee3"]
+Shuffle = ["#33a02c", "#73c05b", "#b2df8a"]
+BitRound-14 = ["#e31a1c", "#ef5a5b", "#fb9a99"]
+BitRound-14-Shuffle = ["#ff7f00", "#fe9f38", "#fdbf6f"]
+
+[defaults.axis_limits]
+"compression ratio" = { ylim = [1.0, 8.0], yscale = "linear" }
+"compression speed (bytes/sec)" = { ylim = [31622776.6, 3162277660.2], yscale = "log" }
+"decompression speed (bytes/sec)" = { ylim = [10000000.0, 3162277660.2], yscale = "log" }
+
+[dataset_overrides.organoid."compression ratio"]
+ylim = [1.0, 10.0]
+
+[dataset_overrides.tissue-off."compression ratio"]
+ylim = [1.0, 2.0]
+
+[bottleneck]
+base_transfer_rate_range = [18, 36, 3]
+exclude_compressors = ["none", "Nvcomp", "Zlibng"]
+exclude_filters = ["BitRound"]
+none_filter_compressors = ["PCodec", "ZFP"]

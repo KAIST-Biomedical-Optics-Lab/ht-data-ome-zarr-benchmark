@@ -1,0 +1,50 @@
+[general]
+output_dir = "figure/slice-image"
+
+[datasets.bacteria]
+path = "data/bacteria.ome.zarr/0"
+tcz = [0, 0, 31]
+y_crop = [0, 0]
+x_crop = [0, 0]
+crange = [1.33, 1.39]
+cmap = "gray"
+
+[datasets.hela]
+path = "data/hela.ome.zarr/0"
+tcz = [36, 0, 32]
+y_crop = [0, 0]
+x_crop = [0, 0]
+crange = [1.33, 1.39]
+cmap = "gray"
+
+[datasets.organoid]
+path = "data/organoid.ome.zarr/0"
+tcz = [144, 0, 10]
+y_crop = [0, 0]
+x_crop = [0, 0]
+crange = [1.33, 1.38]
+cmap = "gray"
+
+[datasets.embryo]
+path = "data/embryo.ome.zarr/0"
+tcz = [80, 0, 55]
+y_crop = [5, -5]
+x_crop = [5, -5]
+crange = [1.33, 1.36]
+cmap = "gray"
+
+[datasets.tissue-on]
+path = "data/birefringent-data.ome.zarr/0"
+tcz = [0, 0, 40]
+y_crop = [540, -540]
+x_crop = [200, -200]
+crange = [1.48, 1.52]
+cmap = "gray"
+
+[datasets.tissue-off]
+path = "data/birefringent-data.ome.zarr/0"
+tcz = [0, 1, 40]
+y_crop = [540, -540]
+x_crop = [200, -200]
+crange = [-0.001, 0.001]
+cmap = "PiYG"
